@@ -1,0 +1,86 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "lfegg/MoonChart"
+
+import(
+  "CAIMEOX/svg"
+)
+
+// Values
+pub fn bar_chart(data~ : Array[Int], width? : Int, height? : Int, padding? : Padding, fill? : String, x_ticks? : Int, y_ticks? : Int, axis_font_size? : Int, show_axes? : Bool) -> @svg.Element
+
+pub fn bar_chart_float(data~ : Array[Double], width? : Int, height? : Int, padding? : Padding, fill? : String, x_ticks? : Int, y_ticks? : Int, axis_font_size? : Int, show_axes? : Bool) -> @svg.Element
+
+pub fn bar_chart_float_with_options(data~ : Array[Double], options~ : ChartOptions, fill? : String, name? : String, stroke? : String, stroke_width? : Int) -> @svg.Element
+
+pub fn bar_chart_with_options(data~ : Array[Int], options~ : ChartOptions, fill? : String, name? : String, stroke? : String, stroke_width? : Int) -> @svg.Element
+
+pub fn chart_options(width? : Int, height? : Int, padding? : Padding, x_ticks? : Int, y_ticks? : Int, axis_font_size? : Int, show_axes? : Bool, float_label_precision? : Int) -> ChartOptions
+
+pub fn line_chart(data~ : Array[Int], width? : Int, height? : Int, padding? : Padding, stroke? : String, stroke_width? : Int, x_ticks? : Int, y_ticks? : Int, axis_font_size? : Int, show_axes? : Bool) -> @svg.Element
+
+pub fn line_chart_float(data~ : Array[Double], width? : Int, height? : Int, padding? : Padding, stroke? : String, stroke_width? : Int, x_ticks? : Int, y_ticks? : Int, axis_font_size? : Int, show_axes? : Bool) -> @svg.Element
+
+pub fn line_chart_float_with_options(data~ : Array[Double], options~ : ChartOptions, stroke? : String, stroke_width? : Int) -> @svg.Element
+
+pub fn line_chart_series(series~ : Array[LineSeries], width? : Int, height? : Int, padding? : Padding, x_ticks? : Int, y_ticks? : Int, axis_font_size? : Int, show_axes? : Bool, show_legend? : Bool) -> @svg.Element
+
+pub fn line_chart_series_float(series~ : Array[LineSeriesFloat], width? : Int, height? : Int, padding? : Padding, x_ticks? : Int, y_ticks? : Int, axis_font_size? : Int, show_axes? : Bool, show_legend? : Bool) -> @svg.Element
+
+pub fn line_chart_series_float_with_options(series~ : Array[LineSeriesFloat], options~ : SeriesChartOptions) -> @svg.Element
+
+pub fn line_chart_series_with_options(series~ : Array[LineSeries], options~ : SeriesChartOptions) -> @svg.Element
+
+pub fn line_chart_with_options(data~ : Array[Int], options~ : ChartOptions, stroke? : String, stroke_width? : Int) -> @svg.Element
+
+pub fn line_series(data~ : Array[Int], name? : String, stroke? : String, stroke_width? : Int) -> LineSeries
+
+pub fn line_series_float(data~ : Array[Double], name? : String, stroke? : String, stroke_width? : Int) -> LineSeriesFloat
+
+pub fn padding(Int) -> Padding
+
+pub fn series_chart_options(base? : ChartOptions, show_legend? : Bool) -> SeriesChartOptions
+
+// Errors
+
+// Types and methods
+pub struct ChartOptions {
+  width : Int
+  height : Int
+  padding : Padding
+  x_ticks : Int
+  y_ticks : Int
+  axis_font_size : Int
+  show_axes : Bool
+  float_label_precision : Int
+}
+
+pub struct LineSeries {
+  data : Array[Int]
+  name : String
+  stroke : String
+  stroke_width : Int
+}
+
+pub struct LineSeriesFloat {
+  data : Array[Double]
+  name : String
+  stroke : String
+  stroke_width : Int
+}
+
+pub struct Padding {
+  left : Int
+  right : Int
+  top : Int
+  bottom : Int
+}
+
+pub struct SeriesChartOptions {
+  base : ChartOptions
+  show_legend : Bool
+}
+
+// Type aliases
+
+// Traits
+

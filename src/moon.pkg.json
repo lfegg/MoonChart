@@ -1,0 +1,13 @@
+{
+  "is-main": true,
+  "import": [
+    {
+      "path": "CAIMEOX/svg",
+      "alias": "svg"
+    },
+    {
+      "path": "lfegg/MoonChart",
+      "alias": "lib"
+    }
+  ]
+}
