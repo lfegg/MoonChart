@@ -14,7 +14,7 @@ pub fn bar_chart_float_with_options(data~ : Array[Double], options~ : ChartOptio
 
 pub fn bar_chart_with_options(data~ : Array[Int], options~ : ChartOptions, fill? : String, name? : String, stroke? : String, stroke_width? : Int) -> @svg.Element
 
-pub fn chart_options(width? : Int, height? : Int, padding? : Padding, x_ticks? : Int, y_ticks? : Int, axis_font_size? : Int, show_axes? : Bool, float_label_precision? : Int) -> ChartOptions
+pub fn chart_options(width? : Int, height? : Int, padding? : Padding, x_labels? : Array[String]?, x_ticks? : Int, y_ticks? : Int, axis_font_size? : Int, show_axes? : Bool, float_label_precision? : Int) -> ChartOptions
 
 pub fn line_chart(data~ : Array[Int], width? : Int, height? : Int, padding? : Padding, stroke? : String, stroke_width? : Int, x_ticks? : Int, y_ticks? : Int, axis_font_size? : Int, show_axes? : Bool) -> @svg.Element
 
@@ -47,6 +47,7 @@ pub struct ChartOptions {
   width : Int
   height : Int
   padding : Padding
+  x_labels : Array[String]?
   x_ticks : Int
   y_ticks : Int
   axis_font_size : Int

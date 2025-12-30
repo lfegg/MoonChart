@@ -84,6 +84,31 @@ println(svg)
 - `name != ""` 时会在右上角显示 legend
 - 线条样式由 `stroke`/`stroke_width` 控制
 
+### 自定义 x 轴刻度标签（x_labels）
+
+默认情况下，x 轴标签是索引（`0..n-1`）。如果你需要时间轴/分类名，可以在 `ChartOptions` 里提供 `x_labels`：
+
+```moonbit
+let opt = @MoonChart.chart_options(
+	width=600,
+	height=240,
+	x_ticks=3,
+	axis_font_size=10,
+	x_labels=Some(["Jan", "Feb", "Mar", "Apr", "May"]),
+)
+
+let svg = @MoonChart.line_chart_with_options(
+	data=[10, 20, 15, 30, 25],
+	options=opt,
+)
+println(svg)
+```
+
+说明：
+
+- tick 位置仍按索引均匀分布；`x_ticks` 控制显示多少个标签（会稀疏显示）
+- 若 `labels` 长度不足，越界的 idx 会回退显示 idx 字符串
+
 ## Float 数据
 
 当数据包含小数时，使用 `*_float` 版本：

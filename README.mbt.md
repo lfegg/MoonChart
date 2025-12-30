@@ -47,7 +47,7 @@ println(svg)
 
 ## Options（推荐用法）
 
-- `chart_options(...) -> ChartOptions`：宽高、padding、刻度数、字体、是否显示坐标轴、Float 标签精度
+- `chart_options(...) -> ChartOptions`：宽高、padding、刻度数、字体、是否显示坐标轴、Float 标签精度、x 轴自定义标签（`x_labels`）
 - `series_chart_options(...) -> SeriesChartOptions`：在 `ChartOptions` 上增加 `show_legend`
 
 对应入口：
@@ -61,6 +61,7 @@ println(svg)
 - y 轴范围默认包含 0（避免从最小值起导致视觉误导）
 - `show_axes=true` 时启用“自动留白”，减少 y 轴标签/legend 被浏览器裁剪
 - `float_label_precision`：`-1` 表示沿用默认字符串化；`>=0` 固定小数位
+- `x_labels`：提供 `Some(labels)` 时，x 轴在 tick 位置显示对应标签（越界回退 idx 字符串）
 
 ## 开发
 

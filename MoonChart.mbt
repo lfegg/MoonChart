@@ -17,6 +17,11 @@ pub struct ChartOptions {
   width : Int
   height : Int
   padding : Padding
+  /// x 轴自定义标签（None 表示使用索引 0..n-1）。
+  ///
+  /// - `Some(labels)` 时：tick 位置仍按索引计算，但显示 `labels[idx]`（越界回退到 idx 字符串）。
+  /// - 与 `x_ticks` 配合：只在 tick 位置显示少量标签。
+  x_labels : Array[String]?
   x_ticks : Int
   y_ticks : Int
   axis_font_size : Int
@@ -31,6 +36,7 @@ pub fn chart_options(
   width? : Int = 600,
   height? : Int = 200,
   padding? : Padding = padding(20),
+  x_labels? : Array[String]? = None,
   x_ticks? : Int = 5,
   y_ticks? : Int = 5,
   axis_font_size? : Int = 10,
@@ -41,6 +47,7 @@ pub fn chart_options(
     width,
     height,
     padding,
+    x_labels,
     x_ticks,
     y_ticks,
     axis_font_size,
@@ -201,7 +208,20 @@ fn max_y_label_width_float(
 }
 
 ///|
-fn max_x_label_half_width(n : Int, ticks : Int, font_size : Int) -> Int {
+fn x_label_for_idx(idx : Int, labels : Array[String]?) -> String {
+  match labels {
+    None => "\{idx}"
+    Some(ls) => if idx >= 0 && idx < ls.length() { ls[idx] } else { "\{idx}" }
+  }
+}
+
+///|
+fn max_x_label_half_width(
+  n : Int,
+  ticks : Int,
+  font_size : Int,
+  labels : Array[String]?,
+) -> Int {
   if n <= 0 {
     0
   } else {
@@ -216,10 +236,21 @@ fn max_x_label_half_width(n : Int, ticks : Int, font_size : Int) -> Int {
         t
       }
     }
-    // x 轴标签是索引字符串；最大宽度一般来自最大 idx。
-    let max_idx = if tcount <= 0 { denom } else { denom }
-    let w = estimate_text_width(font_size, "\{max_idx}")
-    (w + 1) / 2
+    if tcount <= 1 {
+      let w = estimate_text_width(font_size, x_label_for_idx(0, labels))
+      (w + 1) / 2
+    } else {
+      let max_w = loop (0, 0) {
+        (i, acc) if i >= tcount => acc
+        (i, acc) => {
+          let idx = i * denom / (tcount - 1)
+          let w = estimate_text_width(font_size, x_label_for_idx(idx, labels))
+          let acc2 = if w > acc { w } else { acc }
+          continue (i + 1, acc2)
+        }
+      }
+      (max_w + 1) / 2
+    }
   }
 }
 
@@ -246,6 +277,7 @@ fn layout_for_int_axis(
       x_n,
       options.x_ticks,
       options.axis_font_size,
+      options.x_labels,
     )
     let left_needed0 = label_gap + y_w + 2
     let left_needed1 = if tick_len > left_needed0 {
@@ -303,6 +335,7 @@ fn layout_for_float_axis(
       x_n,
       options.x_ticks,
       options.axis_font_size,
+      options.x_labels,
     )
     let left_needed0 = label_gap + y_w + 2
     let left_needed1 = if tick_len > left_needed0 {
@@ -557,7 +590,7 @@ fn axis_layer_int(
       axis_color,
       axis_color,
     ) +
-    x_ticks_and_labels_indexed(
+    x_ticks_and_labels(
       x_n,
       lay.plot_left,
       lay.plot_top,
@@ -567,6 +600,7 @@ fn axis_layer_int(
       options.axis_font_size,
       axis_color,
       axis_color,
+      options.x_labels,
     )
   } else {
     @svg.g([])
@@ -602,7 +636,7 @@ fn axis_layer_float(
       axis_color,
       options.float_label_precision,
     ) +
-    x_ticks_and_labels_indexed(
+    x_ticks_and_labels(
       x_n,
       lay.plot_left,
       lay.plot_top,
@@ -612,6 +646,7 @@ fn axis_layer_float(
       options.axis_font_size,
       axis_color,
       axis_color,
+      options.x_labels,
     )
   } else {
     @svg.g([])
@@ -811,7 +846,7 @@ fn y_ticks_and_labels_float(
 }
 
 ///|
-fn x_ticks_and_labels_indexed(
+fn x_ticks_and_labels(
   n : Int,
   plot_left : Int,
   plot_top : Int,
@@ -821,6 +856,7 @@ fn x_ticks_and_labels_indexed(
   font_size : Int,
   stroke : String,
   fill : String,
+  labels : Array[String]?,
 ) -> @svg.Element {
   if n <= 0 {
     @svg.g([])
@@ -844,7 +880,7 @@ fn x_ticks_and_labels_indexed(
         @svg.TextAnchor["middle"],
         @svg.Fill[fill],
       ],
-      child=@svg.Element::str("0"),
+      child=@svg.Element::str(x_label_for_idx(0, labels)),
     )
   } else {
     let tcount = {
@@ -880,7 +916,7 @@ fn x_ticks_and_labels_indexed(
             @svg.TextAnchor["middle"],
             @svg.Fill[fill],
           ],
-          child=@svg.Element::str("\{idx}"),
+          child=@svg.Element::str(x_label_for_idx(idx, labels)),
         )
         continue (i + 1, acc + tick + label)
       }
