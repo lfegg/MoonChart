@@ -6,6 +6,8 @@ fn main {
     x_ticks=5,
     y_ticks=5,
     axis_font_size=12,
+    show_points=true,
+    point_radius=3,
     // -1 表示默认字符串化；>=0 表示固定小数位
     float_label_precision=2,
   )

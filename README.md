@@ -40,23 +40,35 @@ println(svg)
 
 为了减少重复参数，建议用 `chart_options(...)` / `series_chart_options(...)` 组合，再调用 `*_with_options` 版本。
 
+另外，坐标轴颜色、文字颜色、默认折线颜色、默认柱子填充色、字体大小等，都可以通过 `ChartStyle`（`chart_style(...)`）统一配置。
+
+折线图如果需要更方便读数，可以开启 `show_points=true` 在折线上绘制点（配合 `point_radius` 调整半径，默认关闭）。
+
 折线图（Int）：
 
 ```moonbit
+let style = @MoonChart.chart_style(
+	axis_color="#000",
+	text_color="#000",
+	default_line_stroke="#3355cc",
+	axis_font_size=12,
+)
+
 let opt = @MoonChart.chart_options(
 	width=600,
 	height=240,
 	padding=@MoonChart.padding(20),
+	style=style,
 	x_ticks=5,
 	y_ticks=5,
-	axis_font_size=12,
 	show_axes=true,
 )
 
 let svg = @MoonChart.line_chart_with_options(
 	data=[10, 20, 15, 30, 25],
 	options=opt,
-	stroke="#3355cc",
+	// stroke 为空时会使用 style.default_line_stroke（默认仍为 "#3355cc"）
+	stroke="",
 	stroke_width=2,
 )
 println(svg)
@@ -108,6 +120,23 @@ println(svg)
 
 - tick 位置仍按索引均匀分布；`x_ticks` 控制显示多少个标签（会稀疏显示）
 - 若 `labels` 长度不足，越界的 idx 会回退显示 idx 字符串
+
+### 折线图点标记（show_points / point_radius）
+
+```moonbit
+let opt = @MoonChart.chart_options(
+	width=600,
+	height=240,
+	show_points=true,
+	point_radius=2,
+)
+
+let svg = @MoonChart.line_chart_with_options(
+	data=[10, 20, 15, 30, 25],
+	options=opt,
+)
+println(svg)
+```
 
 ## Float 数据
 

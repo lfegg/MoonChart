@@ -168,7 +168,28 @@ test "line_chart_custom_x_labels" {
     x_labels=Some(["Jan", "Feb", "Mar", "Apr", "May"]),
   )
   let svg = line_chart_with_options(data=[10, 20, 15, 30, 25], options~)
-  inspect(svg, content=(
-    #|<!DOCTYPE svg><svg height="200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="600"><line stroke-width="1" y2="180" y1="180" stroke="#000" x2="580" x1="20"/><line stroke-width="1" y2="180" y1="20" stroke="#000" x2="20" x1="20"/><g/><line stroke-width="1" y2="180" y1="180" stroke="#000" x2="16" x1="20"/><text fill="#000" text-anchor="end" x="14" y="182" font-size="8">0</text><line stroke-width="1" y2="142" y1="142" stroke="#000" x2="16" x1="20"/><text fill="#000" text-anchor="end" x="14" y="144" font-size="8">7</text><line stroke-width="1" y2="100" y1="100" stroke="#000" x2="16" x1="20"/><text fill="#000" text-anchor="end" x="14" y="102" font-size="8">15</text><line stroke-width="1" y2="62" y1="62" stroke="#000" x2="16" x1="20"/><text fill="#000" text-anchor="end" x="14" y="64" font-size="8">22</text><line stroke-width="1" y2="20" y1="20" stroke="#000" x2="16" x1="20"/><text fill="#000" text-anchor="end" x="14" y="22" font-size="8">30</text><g/><line stroke-width="1" y2="184" y1="180" stroke="#000" x2="20" x1="20"/><text fill="#000" text-anchor="middle" x="20" y="192" font-size="8">Jan</text><line stroke-width="1" y2="184" y1="180" stroke="#000" x2="300" x1="300"/><text fill="#000" text-anchor="middle" x="300" y="192" font-size="8">Mar</text><line stroke-width="1" y2="184" y1="180" stroke="#000" x2="580" x1="580"/><text fill="#000" text-anchor="middle" x="580" y="192" font-size="8">May</text><path fill="none" stroke-width="2" stroke="#3355cc" d="M 20,126 L 160,73 L 300,100 L 440,20 L 580,46 "/></svg>
-  ))
+  inspect(
+    svg,
+    content=(
+      #|<!DOCTYPE svg><svg height="200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="600"><line stroke-width="1" y2="180" y1="180" stroke="#000" x2="580" x1="20"/><line stroke-width="1" y2="180" y1="20" stroke="#000" x2="20" x1="20"/><g/><line stroke-width="1" y2="180" y1="180" stroke="#000" x2="16" x1="20"/><text fill="#000" text-anchor="end" x="14" y="182" font-size="8">0</text><line stroke-width="1" y2="142" y1="142" stroke="#000" x2="16" x1="20"/><text fill="#000" text-anchor="end" x="14" y="144" font-size="8">7</text><line stroke-width="1" y2="100" y1="100" stroke="#000" x2="16" x1="20"/><text fill="#000" text-anchor="end" x="14" y="102" font-size="8">15</text><line stroke-width="1" y2="62" y1="62" stroke="#000" x2="16" x1="20"/><text fill="#000" text-anchor="end" x="14" y="64" font-size="8">22</text><line stroke-width="1" y2="20" y1="20" stroke="#000" x2="16" x1="20"/><text fill="#000" text-anchor="end" x="14" y="22" font-size="8">30</text><g/><line stroke-width="1" y2="184" y1="180" stroke="#000" x2="20" x1="20"/><text fill="#000" text-anchor="middle" x="20" y="192" font-size="8">Jan</text><line stroke-width="1" y2="184" y1="180" stroke="#000" x2="300" x1="300"/><text fill="#000" text-anchor="middle" x="300" y="192" font-size="8">Mar</text><line stroke-width="1" y2="184" y1="180" stroke="#000" x2="580" x1="580"/><text fill="#000" text-anchor="middle" x="580" y="192" font-size="8">May</text><path fill="none" stroke-width="2" stroke="#3355cc" d="M 20,126 L 160,73 L 300,100 L 440,20 L 580,46 "/></svg>
+    ),
+  )
+}
+
+///|
+test "line_chart_show_points" {
+  let options = chart_options(
+    width=120,
+    height=60,
+    show_axes=false,
+    show_points=true,
+    point_radius=2,
+  )
+  let svg = line_chart_with_options(data=[10, 20, 15], options~)
+  inspect(
+    svg,
+    content=(
+      #|<!DOCTYPE svg><svg height="60" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="120"><g/><path fill="none" stroke-width="2" stroke="#3355cc" d="M 20,30 L 60,20 L 100,25 "/><circle fill="#3355cc" cy="30" r="2" cx="20"/><circle fill="#3355cc" cy="20" r="2" cx="60"/><circle fill="#3355cc" cy="25" r="2" cx="100"/></svg>
+    ),
+  )
 }

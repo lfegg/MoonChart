@@ -47,8 +47,18 @@ println(svg)
 
 ## Options（推荐用法）
 
-- `chart_options(...) -> ChartOptions`：宽高、padding、刻度数、字体、是否显示坐标轴、Float 标签精度、x 轴自定义标签（`x_labels`）
+- `chart_style(...) -> ChartStyle`：坐标轴/文字颜色、默认折线颜色、默认柱子填充色、字体大小等主题配置
+- `chart_options(...) -> ChartOptions`：宽高、padding、刻度数、是否显示坐标轴、Float 标签精度、x 轴自定义标签（`x_labels`），以及 `style`
 - `series_chart_options(...) -> SeriesChartOptions`：在 `ChartOptions` 上增加 `show_legend`
+
+示例：
+
+```moonbit
+let style = @MoonChart.chart_style(axis_color="#000", text_color="#000", axis_font_size=12)
+let opt = @MoonChart.chart_options(width=600, height=240, style=style)
+let svg = @MoonChart.line_chart_with_options(data=[1, 2, 3], options=opt)
+println(svg)
+```
 
 对应入口：
 
@@ -62,6 +72,8 @@ println(svg)
 - `show_axes=true` 时启用“自动留白”，减少 y 轴标签/legend 被浏览器裁剪
 - `float_label_precision`：`-1` 表示沿用默认字符串化；`>=0` 固定小数位
 - `x_labels`：提供 `Some(labels)` 时，x 轴在 tick 位置显示对应标签（越界回退 idx 字符串）
+- `show_points`：折线图是否绘制点标记（默认关闭）
+- `point_radius`：点标记半径（px，仅在 `show_points=true` 时生效）
 
 ## 开发
 

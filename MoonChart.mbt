@@ -12,11 +12,40 @@ pub fn padding(all : Int) -> Padding {
 }
 
 ///|
+/// 图表主题/样式（把颜色、默认笔触、字体等收口到一个地方）。
+pub struct ChartStyle {
+  axis_color : String
+  text_color : String
+  default_line_stroke : String
+  default_bar_fill : String
+  axis_font_size : Int
+}
+
+///|
+/// 构造 `ChartStyle`（默认值保持现有输出不变）。
+pub fn chart_style(
+  axis_color? : String = "#000",
+  text_color? : String = "#000",
+  default_line_stroke? : String = "#3355cc",
+  default_bar_fill? : String = "#3355cc",
+  axis_font_size? : Int = 10,
+) -> ChartStyle {
+  {
+    axis_color,
+    text_color,
+    default_line_stroke,
+    default_bar_fill,
+    axis_font_size,
+  }
+}
+
+///|
 /// 统一的图表公共参数（Int/Float 共用）。
 pub struct ChartOptions {
   width : Int
   height : Int
   padding : Padding
+  style : ChartStyle
   /// x 轴自定义标签（None 表示使用索引 0..n-1）。
   ///
   /// - `Some(labels)` 时：tick 位置仍按索引计算，但显示 `labels[idx]`（越界回退到 idx 字符串）。
@@ -24,8 +53,11 @@ pub struct ChartOptions {
   x_labels : Array[String]?
   x_ticks : Int
   y_ticks : Int
-  axis_font_size : Int
   show_axes : Bool
+  /// 是否在折线上绘制数据点（默认关闭，避免改变输出/快照）。
+  show_points : Bool
+  /// 数据点半径（px）。仅在 `show_points=true` 时生效。
+  point_radius : Int
   /// Float 轴标签格式：-1 表示沿用默认字符串化（保持当前行为）；>=0 表示固定小数位。
   float_label_precision : Int
 }
@@ -36,22 +68,41 @@ pub fn chart_options(
   width? : Int = 600,
   height? : Int = 200,
   padding? : Padding = padding(20),
+  style? : ChartStyle = chart_style(),
   x_labels? : Array[String]? = None,
   x_ticks? : Int = 5,
   y_ticks? : Int = 5,
-  axis_font_size? : Int = 10,
+  axis_font_size? : Int = -1,
   show_axes? : Bool = true,
+  show_points? : Bool = false,
+  point_radius? : Int = 2,
   float_label_precision? : Int = -1,
 ) -> ChartOptions {
+  let style2 = {
+    let fs = if axis_font_size < 0 {
+      style.axis_font_size
+    } else {
+      axis_font_size
+    }
+    {
+      axis_color: style.axis_color,
+      text_color: style.text_color,
+      default_line_stroke: style.default_line_stroke,
+      default_bar_fill: style.default_bar_fill,
+      axis_font_size: fs,
+    }
+  }
   {
     width,
     height,
     padding,
+    style: style2,
     x_labels,
     x_ticks,
     y_ticks,
-    axis_font_size,
     show_axes,
+    show_points,
+    point_radius,
     float_label_precision,
   }
 }
@@ -271,12 +322,12 @@ fn layout_for_int_axis(
       minv,
       maxv,
       options.y_ticks,
-      options.axis_font_size,
+      options.style.axis_font_size,
     )
     let x_half = max_x_label_half_width(
       x_n,
       options.x_ticks,
-      options.axis_font_size,
+      options.style.axis_font_size,
       options.x_labels,
     )
     let left_needed0 = label_gap + y_w + 2
@@ -328,13 +379,13 @@ fn layout_for_float_axis(
       minv,
       maxv,
       options.y_ticks,
-      options.axis_font_size,
+      options.style.axis_font_size,
       options.float_label_precision,
     )
     let x_half = max_x_label_half_width(
       x_n,
       options.x_ticks,
-      options.axis_font_size,
+      options.style.axis_font_size,
       options.x_labels,
     )
     let left_needed0 = label_gap + y_w + 2
@@ -569,9 +620,11 @@ fn axis_layer_int(
   minv : Int,
   maxv : Int,
   x_n : Int,
-  axis_color : String,
 ) -> @svg.Element {
   if options.show_axes {
+    let axis_color = options.style.axis_color
+    let text_color = options.style.text_color
+    let font_size = options.style.axis_font_size
     axes(
       lay.plot_left,
       lay.plot_top,
@@ -586,9 +639,9 @@ fn axis_layer_int(
       lay.plot_top,
       lay.plot_height,
       options.y_ticks,
-      options.axis_font_size,
+      font_size,
       axis_color,
-      axis_color,
+      text_color,
     ) +
     x_ticks_and_labels(
       x_n,
@@ -597,9 +650,9 @@ fn axis_layer_int(
       lay.plot_width,
       lay.plot_height,
       options.x_ticks,
-      options.axis_font_size,
+      font_size,
       axis_color,
-      axis_color,
+      text_color,
       options.x_labels,
     )
   } else {
@@ -614,9 +667,11 @@ fn axis_layer_float(
   minv : Double,
   maxv : Double,
   x_n : Int,
-  axis_color : String,
 ) -> @svg.Element {
   if options.show_axes {
+    let axis_color = options.style.axis_color
+    let text_color = options.style.text_color
+    let font_size = options.style.axis_font_size
     axes(
       lay.plot_left,
       lay.plot_top,
@@ -631,9 +686,9 @@ fn axis_layer_float(
       lay.plot_top,
       lay.plot_height,
       options.y_ticks,
-      options.axis_font_size,
+      font_size,
       axis_color,
-      axis_color,
+      text_color,
       options.float_label_precision,
     ) +
     x_ticks_and_labels(
@@ -643,9 +698,9 @@ fn axis_layer_float(
       lay.plot_width,
       lay.plot_height,
       options.x_ticks,
-      options.axis_font_size,
+      font_size,
       axis_color,
-      axis_color,
+      text_color,
       options.x_labels,
     )
   } else {
@@ -998,12 +1053,117 @@ fn line_path_d_scaled_float(
 }
 
 ///|
+fn line_points_layer_int(
+  data : Array[Int],
+  minv : Int,
+  maxv : Int,
+  x_denom : Int,
+  plot_left : Int,
+  plot_top : Int,
+  plot_width : Int,
+  plot_height : Int,
+  radius : Int,
+  fill : String,
+) -> @svg.Element {
+  let n = data.length()
+  if n <= 0 || radius <= 0 {
+    @svg.g([])
+  } else {
+    let range = {
+      let r = maxv - minv
+      if r == 0 {
+        1
+      } else {
+        r
+      }
+    }
+    let denom = if x_denom <= 0 { 1 } else { x_denom }
+    let x0 = plot_left
+    let y0 = plot_top + (maxv - data[0]) * plot_height / range
+    let first = @svg.circle([
+      @svg.Cx["\{x0}"],
+      @svg.Cy["\{y0}"],
+      @svg.R["\{radius}"],
+      @svg.Fill[fill],
+    ])
+    loop (1, first) {
+      (i, acc) if i >= n => acc
+      (i, acc) => {
+        let x = plot_left + i * plot_width / denom
+        let y = plot_top + (maxv - data[i]) * plot_height / range
+        let c = @svg.circle([
+          @svg.Cx["\{x}"],
+          @svg.Cy["\{y}"],
+          @svg.R["\{radius}"],
+          @svg.Fill[fill],
+        ])
+        continue (i + 1, acc + c)
+      }
+    }
+  }
+}
+
+///|
+fn line_points_layer_float(
+  data : Array[Double],
+  minv : Double,
+  maxv : Double,
+  x_denom : Int,
+  plot_left : Int,
+  plot_top : Int,
+  plot_width : Int,
+  plot_height : Int,
+  radius : Int,
+  fill : String,
+) -> @svg.Element {
+  let n = data.length()
+  if n <= 0 || radius <= 0 {
+    @svg.g([])
+  } else {
+    let range = {
+      let r = maxv - minv
+      if r == 0.0 {
+        1.0
+      } else {
+        r
+      }
+    }
+    let denom = if x_denom <= 0 { 1 } else { x_denom }
+    let x0 = plot_left
+    let y0 = plot_top.to_double() +
+      (maxv - data[0]) * plot_height.to_double() / range
+    let first = @svg.circle([
+      @svg.Cx["\{x0}"],
+      @svg.Cy["\{y0}"],
+      @svg.R["\{radius}"],
+      @svg.Fill[fill],
+    ])
+    loop (1, first) {
+      (i, acc) if i >= n => acc
+      (i, acc) => {
+        let x = plot_left + i * plot_width / denom
+        let y = plot_top.to_double() +
+          (maxv - data[i]) * plot_height.to_double() / range
+        let c = @svg.circle([
+          @svg.Cx["\{x}"],
+          @svg.Cy["\{y}"],
+          @svg.R["\{radius}"],
+          @svg.Fill[fill],
+        ])
+        continue (i + 1, acc + c)
+      }
+    }
+  }
+}
+
+///|
 fn legend_layer(
   series : Array[LineSeries],
   plot_left : Int,
   plot_top : Int,
   plot_width : Int,
   font_size : Int,
+  text_color : String,
 ) -> @svg.Element {
   let x_right = plot_left + plot_width - 2
   let line_len = 14
@@ -1034,7 +1194,7 @@ fn legend_layer(
             @svg.Y["\{y + (font_size / 3)}"],
             @svg.FontSize["\{font_size}"],
             @svg.TextAnchor["end"],
-            @svg.Fill["#000"],
+            @svg.Fill[text_color],
           ],
           child=@svg.Element::str(s.name),
         )
@@ -1051,6 +1211,7 @@ fn legend_layer_float(
   plot_top : Int,
   plot_width : Int,
   font_size : Int,
+  text_color : String,
 ) -> @svg.Element {
   let x_right = plot_left + plot_width - 2
   let line_len = 14
@@ -1081,7 +1242,7 @@ fn legend_layer_float(
             @svg.Y["\{y + (font_size / 3)}"],
             @svg.FontSize["\{font_size}"],
             @svg.TextAnchor["end"],
-            @svg.Fill["#000"],
+            @svg.Fill[text_color],
           ],
           child=@svg.Element::str(s.name),
         )
@@ -1101,6 +1262,7 @@ fn bar_legend_layer(
   plot_top : Int,
   plot_width : Int,
   font_size : Int,
+  text_color : String,
 ) -> @svg.Element {
   if name == "" {
     @svg.g([])
@@ -1142,7 +1304,7 @@ fn bar_legend_layer(
         @svg.Y["\{y + (font_size / 3)}"],
         @svg.FontSize["\{font_size}"],
         @svg.TextAnchor["end"],
-        @svg.Fill["#000"],
+        @svg.Fill[text_color],
       ],
       child=@svg.Element::str(name),
     )
@@ -1163,6 +1325,8 @@ pub fn line_chart_series_float(
   y_ticks? : Int = 5,
   axis_font_size? : Int = 10,
   show_axes? : Bool = true,
+  show_points? : Bool = false,
+  point_radius? : Int = 2,
   show_legend? : Bool = true,
 ) -> @svg.Element {
   line_chart_series_float_with_options(
@@ -1176,6 +1340,8 @@ pub fn line_chart_series_float(
         y_ticks~,
         axis_font_size~,
         show_axes~,
+        show_points~,
+        point_radius~,
       ),
       show_legend~,
     ),
@@ -1219,18 +1385,37 @@ pub fn line_chart_series_float_with_options(
           @svg.StrokeWidth["\{s.stroke_width}"],
         ])
       }
-      continue (i + 1, acc + one)
+      let one2 = if base.show_points &&
+        base.point_radius > 0 &&
+        s.data.length() > 0 {
+        one +
+        line_points_layer_float(
+          s.data,
+          low,
+          high,
+          x_denom,
+          lay.plot_left,
+          lay.plot_top,
+          lay.plot_width,
+          lay.plot_height,
+          base.point_radius,
+          s.stroke,
+        )
+      } else {
+        one
+      }
+      continue (i + 1, acc + one2)
     }
   }
-  let axis_color = "#000"
-  let axis_layer = axis_layer_float(base, lay, low, high, max_len, axis_color)
+  let axis_layer = axis_layer_float(base, lay, low, high, max_len)
   let legend = if options.show_legend {
     legend_layer_float(
       series,
       lay.plot_left,
       lay.plot_top,
       lay.plot_width,
-      base.axis_font_size,
+      base.style.axis_font_size,
+      base.style.text_color,
     )
   } else {
     @svg.g([])
@@ -1252,6 +1437,8 @@ pub fn line_chart_float(
   y_ticks? : Int = 5,
   axis_font_size? : Int = 10,
   show_axes? : Bool = true,
+  show_points? : Bool = false,
+  point_radius? : Int = 2,
 ) -> @svg.Element {
   line_chart_float_with_options(
     data~,
@@ -1263,6 +1450,8 @@ pub fn line_chart_float(
       y_ticks~,
       axis_font_size~,
       show_axes~,
+      show_points~,
+      point_radius~,
     ),
     stroke~,
     stroke_width~,
@@ -1274,10 +1463,15 @@ pub fn line_chart_float(
 pub fn line_chart_float_with_options(
   data~ : Array[Double],
   options~ : ChartOptions,
-  stroke? : String = "#3355cc",
+  stroke? : String = "",
   stroke_width? : Int = 2,
 ) -> @svg.Element {
   let n = data.length()
+  let stroke2 = if stroke == "" {
+    options.style.default_line_stroke
+  } else {
+    stroke
+  }
   let x_denom = if n <= 1 { 1 } else { n - 1 }
   let (minv, maxv) = min_max_float(data)
   let low = if minv > 0.0 { 0.0 } else { minv }
@@ -1299,13 +1493,28 @@ pub fn line_chart_float_with_options(
     @svg.path([
       @svg.D[d],
       @svg.Fill["none"],
-      @svg.Stroke[stroke],
+      @svg.Stroke[stroke2],
       @svg.StrokeWidth["\{stroke_width}"],
     ])
   }
-  let axis_color = "#000"
-  let axis_layer = axis_layer_float(options, lay, low, high, n, axis_color)
-  svg_doc(axis_layer + line, lay.w, lay.h)
+  let axis_layer = axis_layer_float(options, lay, low, high, n)
+  if options.show_points && options.point_radius > 0 && n > 0 {
+    let points = line_points_layer_float(
+      data,
+      low,
+      high,
+      x_denom,
+      lay.plot_left,
+      lay.plot_top,
+      lay.plot_width,
+      lay.plot_height,
+      options.point_radius,
+      stroke2,
+    )
+    svg_doc(axis_layer + line + points, lay.w, lay.h)
+  } else {
+    svg_doc(axis_layer + line, lay.w, lay.h)
+  }
 }
 
 ///|
@@ -1342,12 +1551,13 @@ pub fn bar_chart_float(
 pub fn bar_chart_float_with_options(
   data~ : Array[Double],
   options~ : ChartOptions,
-  fill? : String = "#3355cc",
+  fill? : String = "",
   name? : String = "",
   stroke? : String = "",
   stroke_width? : Int = 1,
 ) -> @svg.Element {
   let n = data.length()
+  let fill2 = if fill == "" { options.style.default_bar_fill } else { fill }
   let (minv, maxv) = min_max_float(data)
   let low = if minv > 0.0 { 0.0 } else { minv }
   let high = if maxv < 0.0 { 0.0 } else { maxv }
@@ -1385,7 +1595,7 @@ pub fn bar_chart_float_with_options(
           @svg.Y["\{y}"],
           @svg.Width["\{bar_w}"],
           @svg.Height["\{bar_h}"],
-          @svg.Fill[fill],
+          @svg.Fill[fill2],
         ])
       } else {
         @svg.rect([
@@ -1393,7 +1603,7 @@ pub fn bar_chart_float_with_options(
           @svg.Y["\{y}"],
           @svg.Width["\{bar_w}"],
           @svg.Height["\{bar_h}"],
-          @svg.Fill[fill],
+          @svg.Fill[fill2],
           @svg.Stroke[stroke],
           @svg.StrokeWidth["\{stroke_width}"],
         ])
@@ -1401,17 +1611,17 @@ pub fn bar_chart_float_with_options(
       continue (i + 1, acc + rect)
     }
   }
-  let axis_color = "#000"
-  let axis_layer = axis_layer_float(options, lay, low, high, n, axis_color)
+  let axis_layer = axis_layer_float(options, lay, low, high, n)
   let legend = bar_legend_layer(
     name,
-    fill,
+    fill2,
     stroke,
     stroke_width,
     lay.plot_left,
     lay.plot_top,
     lay.plot_width,
-    options.axis_font_size,
+    options.style.axis_font_size,
+    options.style.text_color,
   )
   svg_doc(axis_layer + legend + bars, lay.w, lay.h)
 }
@@ -1429,6 +1639,8 @@ pub fn line_chart_series(
   y_ticks? : Int = 5,
   axis_font_size? : Int = 10,
   show_axes? : Bool = true,
+  show_points? : Bool = false,
+  point_radius? : Int = 2,
   show_legend? : Bool = true,
 ) -> @svg.Element {
   line_chart_series_with_options(
@@ -1442,6 +1654,8 @@ pub fn line_chart_series(
         y_ticks~,
         axis_font_size~,
         show_axes~,
+        show_points~,
+        point_radius~,
       ),
       show_legend~,
     ),
@@ -1485,18 +1699,37 @@ pub fn line_chart_series_with_options(
           @svg.StrokeWidth["\{s.stroke_width}"],
         ])
       }
-      continue (i + 1, acc + one)
+      let one2 = if base.show_points &&
+        base.point_radius > 0 &&
+        s.data.length() > 0 {
+        one +
+        line_points_layer_int(
+          s.data,
+          low,
+          high,
+          x_denom,
+          lay.plot_left,
+          lay.plot_top,
+          lay.plot_width,
+          lay.plot_height,
+          base.point_radius,
+          s.stroke,
+        )
+      } else {
+        one
+      }
+      continue (i + 1, acc + one2)
     }
   }
-  let axis_color = "#000"
-  let axis_layer = axis_layer_int(base, lay, low, high, max_len, axis_color)
+  let axis_layer = axis_layer_int(base, lay, low, high, max_len)
   let legend = if options.show_legend {
     legend_layer(
       series,
       lay.plot_left,
       lay.plot_top,
       lay.plot_width,
-      base.axis_font_size,
+      base.style.axis_font_size,
+      base.style.text_color,
     )
   } else {
     @svg.g([])
@@ -1519,6 +1752,8 @@ pub fn line_chart(
   y_ticks? : Int = 5,
   axis_font_size? : Int = 10,
   show_axes? : Bool = true,
+  show_points? : Bool = false,
+  point_radius? : Int = 2,
 ) -> @svg.Element {
   line_chart_with_options(
     data~,
@@ -1530,6 +1765,8 @@ pub fn line_chart(
       y_ticks~,
       axis_font_size~,
       show_axes~,
+      show_points~,
+      point_radius~,
     ),
     stroke~,
     stroke_width~,
@@ -1541,10 +1778,15 @@ pub fn line_chart(
 pub fn line_chart_with_options(
   data~ : Array[Int],
   options~ : ChartOptions,
-  stroke? : String = "#3355cc",
+  stroke? : String = "",
   stroke_width? : Int = 2,
 ) -> @svg.Element {
   let n = data.length()
+  let stroke2 = if stroke == "" {
+    options.style.default_line_stroke
+  } else {
+    stroke
+  }
   let x_denom = if n <= 1 { 1 } else { n - 1 }
   let (minv, maxv) = min_max_int(data)
   let low = if minv > 0 { 0 } else { minv }
@@ -1566,13 +1808,28 @@ pub fn line_chart_with_options(
     @svg.path([
       @svg.D[d],
       @svg.Fill["none"],
-      @svg.Stroke[stroke],
+      @svg.Stroke[stroke2],
       @svg.StrokeWidth["\{stroke_width}"],
     ])
   }
-  let axis_color = "#000"
-  let axis_layer = axis_layer_int(options, lay, low, high, n, axis_color)
-  svg_doc(axis_layer + line, lay.w, lay.h)
+  let axis_layer = axis_layer_int(options, lay, low, high, n)
+  if options.show_points && options.point_radius > 0 && n > 0 {
+    let points = line_points_layer_int(
+      data,
+      low,
+      high,
+      x_denom,
+      lay.plot_left,
+      lay.plot_top,
+      lay.plot_width,
+      lay.plot_height,
+      options.point_radius,
+      stroke2,
+    )
+    svg_doc(axis_layer + line + points, lay.w, lay.h)
+  } else {
+    svg_doc(axis_layer + line, lay.w, lay.h)
+  }
 }
 
 ///|
@@ -1609,12 +1866,13 @@ pub fn bar_chart(
 pub fn bar_chart_with_options(
   data~ : Array[Int],
   options~ : ChartOptions,
-  fill? : String = "#3355cc",
+  fill? : String = "",
   name? : String = "",
   stroke? : String = "",
   stroke_width? : Int = 1,
 ) -> @svg.Element {
   let n = data.length()
+  let fill2 = if fill == "" { options.style.default_bar_fill } else { fill }
   let (minv, maxv) = min_max_int(data)
   let low = if minv > 0 { 0 } else { minv }
   let high = if maxv < 0 { 0 } else { maxv }
@@ -1650,7 +1908,7 @@ pub fn bar_chart_with_options(
           @svg.Y["\{y}"],
           @svg.Width["\{bar_w}"],
           @svg.Height["\{bar_h}"],
-          @svg.Fill[fill],
+          @svg.Fill[fill2],
         ])
       } else {
         @svg.rect([
@@ -1658,7 +1916,7 @@ pub fn bar_chart_with_options(
           @svg.Y["\{y}"],
           @svg.Width["\{bar_w}"],
           @svg.Height["\{bar_h}"],
-          @svg.Fill[fill],
+          @svg.Fill[fill2],
           @svg.Stroke[stroke],
           @svg.StrokeWidth["\{stroke_width}"],
         ])
@@ -1666,17 +1924,17 @@ pub fn bar_chart_with_options(
       continue (i + 1, acc + rect)
     }
   }
-  let axis_color = "#000"
-  let axis_layer = axis_layer_int(options, lay, low, high, n, axis_color)
+  let axis_layer = axis_layer_int(options, lay, low, high, n)
   let legend = bar_legend_layer(
     name,
-    fill,
+    fill2,
     stroke,
     stroke_width,
     lay.plot_left,
     lay.plot_top,
     lay.plot_width,
-    options.axis_font_size,
+    options.style.axis_font_size,
+    options.style.text_color,
   )
   svg_doc(axis_layer + legend + bars, lay.w, lay.h)
 }
